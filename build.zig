@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) void {
 
     const check_step = b.step("check", "Check if the project builds without codegen (faster)");
 
-    inline for (1..3) |idx| {
+    inline for (1..4) |idx| {
         const file = std.fmt.comptimePrint("{d:0>2}", .{idx});
 
         const exe = b.addExecutable(.{
@@ -34,5 +34,12 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         });
         check_step.dependOn(&check_exe.step);
+
+        check_exe.root_module.addAnonymousImport("input", .{
+            .root_source_file = b.path("src/inputs/" ++ file ++ ".txt"),
+        });
+        check_exe.root_module.addAnonymousImport("example", .{
+            .root_source_file = b.path("src/examples/" ++ file ++ ".txt"),
+        });
     }
 }
