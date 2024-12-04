@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) void {
 
     const check_step = b.step("check", "Check if the project builds without codegen (faster)");
 
-    inline for (1..4) |idx| {
+    inline for (1..5) |idx| {
         const file = std.fmt.comptimePrint("{d:0>2}", .{idx});
 
         const exe = b.addExecutable(.{
