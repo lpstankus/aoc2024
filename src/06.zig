@@ -39,7 +39,7 @@ fn parseInput(data: []const u8) !struct { map: Map, guard: Guard } {
     var map = Map.init(allocator);
 
     var i: usize = 0;
-    var lines = std.mem.split(u8, data, "\n");
+    var lines = std.mem.splitScalar(u8, data, '\n');
     while (lines.next()) |line| : (i += 1) {
         var row = Row.init(allocator);
         for (line, 0..) |c, j| {
@@ -188,7 +188,7 @@ fn visit(map: Map, guard: Guard) void {
 }
 
 fn moveGuard(map: Map, guard: Guard) ?Guard {
-    const ng = switch (guard.dir) {
+    const ng: Guard = switch (guard.dir) {
         .Up => .{ .x = guard.x, .y = guard.y - 1, .dir = guard.dir },
         .Right => .{ .x = guard.x + 1, .y = guard.y, .dir = guard.dir },
         .Down => .{ .x = guard.x, .y = guard.y + 1, .dir = guard.dir },

@@ -32,7 +32,7 @@ fn solve(comptime name: []const u8) !void {
 
 fn parseInput(data: []const u8) !Calibration {
     var calib = Calibration.init(allocator);
-    var lines = std.mem.split(u8, data, "\n");
+    var lines = std.mem.splitScalar(u8, data, '\n');
     while (lines.next()) |line| {
         if (line.len == 0) continue;
 

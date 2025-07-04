@@ -38,7 +38,7 @@ const HikingGuide = struct {
         var height: usize = 0;
 
         var i: i64 = 0;
-        var lines = std.mem.split(u8, raw, "\n");
+        var lines = std.mem.splitScalar(u8, raw, '\n');
         while (lines.next()) |line| {
             if (line.len == 0) break;
             width = line.len;

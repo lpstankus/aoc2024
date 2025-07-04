@@ -25,7 +25,7 @@ fn solve(comptime name: []const u8) !void {
 
 fn parseInput(data: []const u8) !List {
     var ls = List.init(gpa.allocator());
-    var lines = std.mem.split(u8, data, "\n");
+    var lines = std.mem.splitScalar(u8, data, '\n');
     while (lines.next()) |line| {
         try ls.append(line);
     }

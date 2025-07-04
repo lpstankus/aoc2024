@@ -38,7 +38,7 @@ fn parseInput(data: []const u8) !Map {
     var map = FreqMap.init(allocator);
     var i: usize = 0;
     var j: usize = 0;
-    var lines = std.mem.split(u8, data, "\n");
+    var lines = std.mem.splitScalar(u8, data, '\n');
     while (lines.next()) |line| {
         if (line.len == 0) continue;
         j = 0;

@@ -37,11 +37,11 @@ fn solve(comptime name: []const u8) !void {
 
 fn parseInput(data: []const u8) !struct { pages: PageMap, updates: UpdateList } {
     var pages = PageMap.init(gpa.allocator());
-    var lines = std.mem.split(u8, data, "\n");
+    var lines = std.mem.splitScalar(u8, data, '\n');
     while (lines.next()) |line| {
         if (line.len == 0) break;
 
-        var args = std.mem.split(u8, line, "|");
+        var args = std.mem.splitScalar(u8, line, '|');
         const par = try std.fmt.parseInt(u32, args.next() orelse "", 10);
         const chi = try std.fmt.parseInt(u32, args.next() orelse "", 10);
 
@@ -58,7 +58,7 @@ fn parseInput(data: []const u8) !struct { pages: PageMap, updates: UpdateList } 
     while (lines.next()) |line| {
         if (line.len == 0) continue;
         var update = Update.init(gpa.allocator());
-        var it = std.mem.split(u8, line, ",");
+        var it = std.mem.splitScalar(u8, line, ',');
         while (it.next()) |id| {
             try update.append(try std.fmt.parseInt(u32, id, 10));
         }
