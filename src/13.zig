@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -21,7 +21,7 @@ fn solve(comptime name: []const u8) !void {
 const Target = struct { x: i64, y: i64 };
 const Button = struct { cost: i64, x: i64, y: i64 };
 const Machine = struct { a: Button, b: Button, t: Target };
-const Arcade = std.ArrayList(Machine);
+const Arcade = std.array_list.Managed(Machine);
 
 fn part1(arcade: Arcade) !u64 {
     return requiredTokens(arcade);

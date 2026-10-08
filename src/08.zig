@@ -1,10 +1,10 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 const Tower = struct { x: i64, y: i64 };
-const TowerList = std.ArrayList(Tower);
+const TowerList = std.array_list.Managed(Tower);
 const FreqMap = std.AutoHashMap(u8, TowerList);
 const Map = struct {
     width: usize,

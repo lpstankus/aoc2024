@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -22,10 +22,10 @@ const Stone = u64;
 const BlinkCache = std.AutoHashMap(struct { Stone, u64 }, u64);
 
 const PlutonianPebbles = struct {
-    stones: std.ArrayList(Stone),
+    stones: std.array_list.Managed(Stone),
 
     fn fromRaw(raw: []const u8) !PlutonianPebbles {
-        var stones = std.ArrayList(Stone).init(allocator);
+        var stones = std.array_list.Managed(Stone).init(allocator);
 
         var it = std.mem.splitAny(u8, raw, " \n");
         while (it.next()) |num| {

@@ -1,5 +1,5 @@
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -39,7 +39,7 @@ const Map = struct {
     const CoordSet = std.AutoHashMap(Vec2, void);
 
     fn fromRaw(raw: []const u8) !Map {
-        var grid = try std.ArrayList([]Fill).initCapacity(allocator, 100);
+        var grid = try std.array_list.Managed([]Fill).initCapacity(allocator, 100);
         defer grid.deinit();
 
         var start = Vec2{ .x = 0, .y = 0 };
@@ -53,7 +53,7 @@ const Map = struct {
         while (lines.next()) |line| : (i += 1) {
             if (line.len == 0) break;
 
-            var row = try std.ArrayList(Fill).initCapacity(allocator, 100);
+            var row = try std.array_list.Managed(Fill).initCapacity(allocator, 100);
             defer row.deinit();
 
             width = line.len;
@@ -98,14 +98,14 @@ const Map = struct {
         map.seen.coords = CoordSet.init(allocator);
         defer map.seen.coords.deinit();
 
-        var pq = std.PriorityQueue(Reindeer, void, Reindeer.pqCompare).init(allocator, {});
-        defer pq.deinit();
+        var pq = std.PriorityQueue(Reindeer, void, Reindeer.pqCompare).initContext({});
+        defer pq.deinit(allocator);
 
         var best: u64 = std.math.maxInt(u64);
         var count: usize = 0;
 
-        try pq.add(.{ .pos = map.start });
-        while (pq.removeOrNull()) |r| {
+        try pq.push(allocator, .{ .pos = map.start });
+        while (pq.pop()) |r| {
             const block = map.get(r.pos) catch continue;
             if (block == .wall) continue;
 
@@ -122,9 +122,9 @@ const Map = struct {
             }
             try map.seen.states.put(r.partial(), r.cost);
 
-            try pq.add(r.move());
-            try pq.add(r.rotateRight());
-            try pq.add(r.rotateLeft());
+            try pq.push(allocator, r.move());
+            try pq.push(allocator, r.rotateRight());
+            try pq.push(allocator, r.rotateLeft());
         }
 
         _ = try map.traverseCachedPaths(.{ .pos = map.start });

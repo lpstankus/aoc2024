@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const List = std.ArrayList(i32);
-const ListList = std.ArrayList(List);
+const List = std.array_list.Managed(i32);
+const ListList = std.array_list.Managed(List);
 const Map = std.AutoHashMap(i32, i32);
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 
 pub fn main() !void {
     defer _ = gpa.deinit();

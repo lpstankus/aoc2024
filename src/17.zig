@@ -1,5 +1,5 @@
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -37,7 +37,7 @@ const Computer = struct {
     C: u64,
 
     fn fromRaw(raw: []const u8) !Computer {
-        var program = try std.ArrayList(Opcode).initCapacity(allocator, 100);
+        var program = try std.array_list.Managed(Opcode).initCapacity(allocator, 100);
         defer program.deinit();
 
         var lines = std.mem.splitScalar(u8, raw, '\n');
@@ -54,7 +54,7 @@ const Computer = struct {
         _ = it.next();
         while (it.next()) |op| {
             const n = try std.fmt.parseInt(u3, op, 10);
-            try program.append(@enumFromInt(n));
+            try program.append(@fromBackingInt(@intCast(n)));
         }
 
         return .{
@@ -114,7 +114,7 @@ const Computer = struct {
                 .halt, .cont => continue,
                 .output => |val| {
                     if (ptr == cmp.len) return true;
-                    if (val != @intFromEnum(cmp[@intCast(ptr)])) return false;
+                    if (val != @backingInt(cmp[@intCast(ptr)])) return false;
                     ptr += 1;
                 },
             }
@@ -156,7 +156,7 @@ const Computer = struct {
     }
 
     inline fn literal(computer: Computer) u64 {
-        return @intFromEnum(computer.program[computer.pc + 1]);
+        return @backingInt(computer.program[computer.pc + 1]);
     }
 
     fn reset(computer: *Computer, A: u64) void {

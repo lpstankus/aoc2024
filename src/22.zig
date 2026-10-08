@@ -1,5 +1,5 @@
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 var cache: std.AutoHashMap(u32, usize) = undefined;
@@ -35,8 +35,8 @@ fn solve(comptime name: []const u8) !void {
     println("part 2: {}", .{part2});
 }
 
-fn parseInput(raw: []const u8) !std.ArrayList(usize) {
-    var seeds = std.ArrayList(usize).init(allocator);
+fn parseInput(raw: []const u8) !std.array_list.Managed(usize) {
+    var seeds = std.array_list.Managed(usize).init(allocator);
     var lines = std.mem.splitScalar(u8, raw, '\n');
     while (lines.next()) |line| {
         if (line.len == 0) continue;
@@ -58,7 +58,7 @@ const MODULO: usize = 16777216;
 
 inline fn step(seed: usize, steps: usize) u64 {
     var cur = seed;
-    var prevs = [_]i8{0} ** 5;
+    var prevs: [5]i8 = @splat(0);
     for (0..@min(4, steps)) |i| {
         cur = @mod(cur ^ (cur << 6), MODULO);
         cur = @mod(cur ^ (cur >> 5), MODULO);

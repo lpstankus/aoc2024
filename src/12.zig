@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -34,7 +34,7 @@ const GardenPlots = struct {
     border_map: BorderMap,
 
     fn fromRaw(raw: []const u8) !GardenPlots {
-        var plots = std.ArrayList([]Plant).init(allocator);
+        var plots = std.array_list.Managed([]Plant).init(allocator);
         defer plots.deinit();
 
         var lines = std.mem.splitScalar(u8, raw, '\n');
@@ -57,8 +57,8 @@ const GardenPlots = struct {
         g.border_map.deinit();
     }
 
-    fn calculateRegions(g: *GardenPlots) !std.ArrayList(Region) {
-        var regions = std.ArrayList(Region).init(allocator);
+    fn calculateRegions(g: *GardenPlots) !std.array_list.Managed(Region) {
+        var regions = std.array_list.Managed(Region).init(allocator);
         for (g.plot_map, 0..) |row, i| {
             for (row, 0..) |plant, j| {
                 const idx: i64 = @intCast(i);
@@ -106,31 +106,13 @@ const GardenPlots = struct {
 
     fn calculateSides(g: *GardenPlots) u64 {
         var sides: u64 = 0;
-        while (g.border_map.count() > 0) {
-            var it = g.border_map.keyIterator();
-            const first = it.next().?.*;
-            sides += g.traverseBorder(first);
+        var it = g.border_map.keyIterator();
+        while (it.next()) |border| {
+            // Each straight side has exactly one edge without a predecessor.
+            if (!g.border_map.contains(moveBack(border.*))) sides += 1;
         }
+        g.border_map.clearRetainingCapacity();
         return sides;
-    }
-
-    fn traverseBorder(g: *GardenPlots, cur: Pos) u64 {
-        const prev = moveBack(cur);
-        if (g.border_map.contains(prev)) {
-            defer _ = g.border_map.remove(cur);
-            return g.traverseBorder(prev);
-        }
-        _ = g.border_map.remove(cur);
-
-        const edge = move(cur);
-        if (g.border_map.contains(edge)) return g.traverseBorder(edge);
-
-        var next = rotateRight(cur);
-        if (g.border_map.contains(next)) return g.traverseBorder(next) + 1;
-
-        next = move(rotateLeft(move(cur)));
-        if (g.border_map.contains(next)) return g.traverseBorder(next) + 1;
-        return 1;
     }
 
     inline fn move(cur: Pos) Pos {
@@ -160,15 +142,6 @@ const GardenPlots = struct {
         };
     }
 
-    inline fn rotateRight(cur: Pos) Pos {
-        return switch (cur.dir) {
-            .up => .{ .i = cur.i, .j = cur.j, .dir = .right },
-            .down => .{ .i = cur.i, .j = cur.j, .dir = .left },
-            .right => .{ .i = cur.i, .j = cur.j, .dir = .down },
-            .left => .{ .i = cur.i, .j = cur.j, .dir = .up },
-        };
-    }
-
     inline fn inbounds(garden: GardenPlots, i: i64, j: i64) bool {
         return (0 <= i and i < garden.plot_map.len) and (0 <= j and j < garden.plot_map[0].len);
     }
@@ -186,13 +159,13 @@ const GardenPlots = struct {
     }
 };
 
-fn part1(regions: std.ArrayList(Region)) !u64 {
+fn part1(regions: std.array_list.Managed(Region)) !u64 {
     var price: u64 = 0;
     for (regions.items) |region| price += region.area * region.perimeter;
     return price;
 }
 
-fn part2(regions: std.ArrayList(Region)) !u64 {
+fn part2(regions: std.array_list.Managed(Region)) !u64 {
     var price: u64 = 0;
     for (regions.items) |region| price += region.area * region.sides;
     return price;
@@ -201,4 +174,27 @@ fn part2(regions: std.ArrayList(Region)) !u64 {
 const print = std.debug.print;
 fn println(comptime fmt: []const u8, args: anytype) void {
     std.debug.print(fmt ++ "\n", args);
+}
+
+fn expectPrices(raw: []const u8, perimeter_price: u64, side_price: u64) !void {
+    var garden = try GardenPlots.fromRaw(raw);
+    defer garden.deinit();
+    const regions = try garden.calculateRegions();
+    defer regions.deinit();
+    try std.testing.expectEqual(perimeter_price, try part1(regions));
+    try std.testing.expectEqual(side_price, try part2(regions));
+}
+
+test "sides of a single plot and rectangle" {
+    try expectPrices("A\n", 4, 4);
+    try expectPrices("AA\n", 12, 8);
+}
+
+test "concave corners and a hole" {
+    try expectPrices("AA\nAB\n", 28, 22);
+    try expectPrices("AAA\nABA\nAAA\n", 132, 68);
+}
+
+test "example sides are independent of border iteration order" {
+    try expectPrices(@embedFile("example"), 1930, 1206);
 }

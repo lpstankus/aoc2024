@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 const Pins = [5]u8;
@@ -20,9 +20,9 @@ fn solve(comptime name: []const u8) !void {
     println("part 1: {}", .{part1(data.locks, data.keys)});
 }
 
-fn parseInput(raw: []const u8) !struct { locks: std.ArrayList(Pins), keys: std.ArrayList(Pins) } {
-    var locks = std.ArrayList(Pins).init(allocator);
-    var keys = std.ArrayList(Pins).init(allocator);
+fn parseInput(raw: []const u8) !struct { locks: std.array_list.Managed(Pins), keys: std.array_list.Managed(Pins) } {
+    var locks = std.array_list.Managed(Pins).init(allocator);
+    var keys = std.array_list.Managed(Pins).init(allocator);
 
     var lines = std.mem.splitScalar(u8, raw, '\n');
     while (lines.next()) |line| {
@@ -30,7 +30,7 @@ fn parseInput(raw: []const u8) !struct { locks: std.ArrayList(Pins), keys: std.A
 
         if (std.mem.eql(u8, line, "#####")) {
             var cur: u8 = 0;
-            var pins = [_]u8{0xFF} ** 5;
+            var pins: [5]u8 = @splat(0xFF);
 
             var lock = lines.next().?;
             while (lock.len != 0) : (lock = lines.next().?) {
@@ -46,7 +46,7 @@ fn parseInput(raw: []const u8) !struct { locks: std.ArrayList(Pins), keys: std.A
 
         if (std.mem.eql(u8, line, ".....")) {
             var cur: u8 = 4;
-            var pins = [_]u8{5} ** 5;
+            var pins: [5]u8 = @splat(5);
 
             var lock = lines.next().?;
             while (lock.len != 0) : (lock = lines.next().?) {
@@ -66,7 +66,7 @@ fn parseInput(raw: []const u8) !struct { locks: std.ArrayList(Pins), keys: std.A
     return .{ .keys = keys, .locks = locks };
 }
 
-fn part1(locks: std.ArrayList(Pins), keys: std.ArrayList(Pins)) usize {
+fn part1(locks: std.array_list.Managed(Pins), keys: std.array_list.Managed(Pins)) usize {
     var ans: usize = 0;
     for (locks.items) |lock| {
         outer: for (keys.items) |key| {

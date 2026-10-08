@@ -1,5 +1,5 @@
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 const Id = [2]u8;
@@ -84,7 +84,7 @@ inline fn checkParty(visited: *std.AutoHashMap([6]u8, void), a_id: Id, b_id: Id,
         var key_array = [_]Id{ a_id, b_id, c_id };
         std.mem.sort(Id, &key_array, {}, lessThan);
 
-        var key = [_]u8{0} ** 6;
+        var key: [6]u8 = @splat(0);
         inline for (0..6) |i| key[i] = key_array[@divFloor(i, 2)][@rem(i, 2)];
 
         break :blk key;
@@ -98,7 +98,7 @@ fn largestParty(pcs: Computers) ![]u8 {
     var party = LanParty{
         .pcs = pcs,
         .visited = CompSet.init(allocator),
-        .largest_party = std.ArrayList(Id).init(allocator),
+        .largest_party = std.array_list.Managed(Id).init(allocator),
     };
     defer party.visited.deinit();
     defer party.largest_party.deinit();
@@ -120,10 +120,10 @@ fn largestParty(pcs: Computers) ![]u8 {
 const LanParty = struct {
     pcs: Computers,
     visited: CompSet,
-    largest_party: std.ArrayList(Id),
+    largest_party: std.array_list.Managed(Id),
 
     fn findLargestParty(lp: *LanParty) !void {
-        var p = std.ArrayList(Id).init(allocator);
+        var p = std.array_list.Managed(Id).init(allocator);
         defer p.deinit();
 
         var it = lp.pcs.keyIterator();
@@ -133,7 +133,7 @@ const LanParty = struct {
         }
     }
 
-    fn flpRec(lp: *LanParty, cur_party: *std.ArrayList(Id), new: Id) !void {
+    fn flpRec(lp: *LanParty, cur_party: *std.array_list.Managed(Id), new: Id) !void {
         if (lp.visited.contains(new)) return;
         try lp.visited.put(new, {});
 

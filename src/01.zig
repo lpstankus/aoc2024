@@ -4,11 +4,11 @@ fn println(comptime fmt: []const u8, args: anytype) void {
     std.debug.print(fmt ++ "\n", args);
 }
 
-const List = std.ArrayList(i32);
+const List = std.array_list.Managed(i32);
 const Map = std.AutoHashMap(i32, i32);
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const example = @embedFile("example");

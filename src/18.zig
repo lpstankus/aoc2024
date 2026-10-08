@@ -1,5 +1,5 @@
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -23,8 +23,8 @@ const Cell = enum { corrupt, free };
 
 fn Map(comptime example: bool) type {
     return struct {
-        cells: [SIZE][SIZE]Cell = [_][SIZE]Cell{[_]Cell{.free} ** SIZE} ** SIZE,
-        bytes: std.ArrayList(Vec2),
+        cells: [SIZE][SIZE]Cell = @splat(@as([SIZE]Cell, @splat(.free))),
+        bytes: std.array_list.Managed(Vec2),
 
         const SIZE = if (example) 7 else 71;
         const INITIAL_ELAPSE = if (example) 12 else 1024;
@@ -32,7 +32,7 @@ fn Map(comptime example: bool) type {
         const Self = @This();
 
         fn fromRaw(raw: []const u8) !Self {
-            var map = Self{ .bytes = std.ArrayList(Vec2).init(allocator) };
+            var map = Self{ .bytes = std.array_list.Managed(Vec2).init(allocator) };
             var lines = std.mem.splitScalar(u8, raw, '\n');
             while (lines.next()) |line| {
                 if (line.len == 0) break;
@@ -57,14 +57,14 @@ fn Map(comptime example: bool) type {
         }
 
         fn findExit(map: Self) !u64 {
-            var pq = std.PriorityQueue(struct { Vec2, u64 }, void, compareFn).init(allocator, {});
-            defer pq.deinit();
+            var pq = std.PriorityQueue(struct { Vec2, u64 }, void, compareFn).initContext({});
+            defer pq.deinit(allocator);
 
             var visited = std.AutoHashMap(Vec2, void).init(allocator);
             defer visited.deinit();
 
-            try pq.add(.{ .{}, 0 });
-            while (pq.removeOrNull()) |cur| {
+            try pq.push(allocator, .{ .{}, 0 });
+            while (pq.pop()) |cur| {
                 const cell = map.get(cur[0]) catch continue;
                 if (cell == .corrupt) continue;
 
@@ -74,7 +74,7 @@ fn Map(comptime example: bool) type {
                 if (cur[0].x == SIZE - 1 and cur[0].y == SIZE - 1) return cur[1];
 
                 inline for ([_]Vec2{ .{ .x = -1 }, .{ .x = 1 }, .{ .y = -1 }, .{ .y = 1 } }) |dir| {
-                    try pq.add(.{ .{ .x = cur[0].x + dir.x, .y = cur[0].y + dir.y }, cur[1] + 1 });
+                    try pq.push(allocator, .{ .{ .x = cur[0].x + dir.x, .y = cur[0].y + dir.y }, cur[1] + 1 });
                 }
             }
             return error.PathNotFound;

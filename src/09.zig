@@ -2,7 +2,7 @@ const std = @import("std");
 
 const verbose = false;
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -21,7 +21,7 @@ fn solve(comptime name: []const u8) !void {
 }
 
 fn parseInput(data: []const u8) ![]const i64 {
-    var list = std.ArrayList(i64).init(allocator);
+    var list = std.array_list.Managed(i64).init(allocator);
     defer list.deinit();
 
     var id: i64 = 0;

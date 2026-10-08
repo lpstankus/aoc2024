@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -31,7 +31,7 @@ const Map = struct {
     const Shortcut = struct { beg: Vec2, end: Vec2 };
 
     fn fromRaw(raw: []const u8) !Map {
-        var grid = try std.ArrayList([]Fill).initCapacity(allocator, 100);
+        var grid = try std.array_list.Managed([]Fill).initCapacity(allocator, 100);
         defer grid.deinit();
 
         var start = Vec2{ .x = 0, .y = 0 };
@@ -44,7 +44,7 @@ const Map = struct {
         while (lines.next()) |line| : (i += 1) {
             if (line.len == 0) break;
 
-            var row = try std.ArrayList(Fill).initCapacity(allocator, 100);
+            var row = try std.array_list.Managed(Fill).initCapacity(allocator, 100);
             defer row.deinit();
 
             width = line.len;
@@ -58,7 +58,7 @@ const Map = struct {
                     },
                     'E' => blk: {
                         end = Vec2{ .x = @intCast(j), .y = @intCast(i) };
-                        break :blk @enumFromInt(0);
+                        break :blk @fromBackingInt(@intCast(0));
                     },
                     else => unreachable,
                 });
@@ -90,29 +90,29 @@ const Map = struct {
     }
 
     fn reverseBfs(map: *Map) !void {
-        var pq = std.PriorityQueue(PQPair, void, pqCompare).init(allocator, {});
-        defer pq.deinit();
+        var pq = std.PriorityQueue(PQPair, void, pqCompare).initContext({});
+        defer pq.deinit(allocator);
 
-        try pq.add(.{ map.end, 0 });
-        while (pq.removeOrNull()) |cur| {
+        try pq.push(allocator, .{ map.end, 0 });
+        while (pq.pop()) |cur| {
             const cell = map.get(cur[0]) catch continue;
             switch (cell.*) {
                 .wall => continue,
                 else => |*val| {
-                    if (@intFromEnum(val.*) < cur[1]) continue;
-                    val.* = @enumFromInt(cur[1]);
+                    if (@backingInt(val.*) < cur[1]) continue;
+                    val.* = @fromBackingInt(@intCast(cur[1]));
                 },
             }
             inline for ([_]Vec2{ .{ .x = 1 }, .{ .x = -1 }, .{ .y = 1 }, .{ .y = -1 } }) |dir| {
                 const new_pos = Vec2{ .x = cur[0].x + dir.x, .y = cur[0].y + dir.y };
-                try pq.add(.{ new_pos, cur[1] + 1 });
+                try pq.push(allocator, .{ new_pos, cur[1] + 1 });
             }
         }
     }
 
     fn findShortcuts(map: *Map, fase_max: u64) !u64 {
-        var pq = std.PriorityQueue(PQPair, void, pqCompare).init(allocator, {});
-        defer pq.deinit();
+        var pq = std.PriorityQueue(PQPair, void, pqCompare).initContext({});
+        defer pq.deinit(allocator);
 
         var buckets = std.AutoHashMap(u64, u64).init(allocator);
         defer buckets.deinit();
@@ -171,7 +171,7 @@ const Map = struct {
         const cell = try map.get(pos);
         return switch (cell.*) {
             .wall => error.Blocked,
-            else => |val| @intCast(@intFromEnum(val)),
+            else => |val| @intCast(@backingInt(val)),
         };
     }
 };

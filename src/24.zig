@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 const Reg = [3]u8;
@@ -84,7 +84,7 @@ fn part1(ops: OpMap, regs: RegMap) !usize {
 }
 
 fn part2(input_ops: OpMap, input_rev: RevOpMap, nbits: usize) !void {
-    var errors = std.ArrayList(Reg).init(allocator);
+    var errors = std.array_list.Managed(Reg).init(allocator);
     defer errors.deinit();
 
     var ops = try input_ops.clone();
@@ -185,7 +185,7 @@ fn resolveRec(ops: *OpMap, regs: *RegMap, reg: Reg) !bool {
 }
 
 inline fn buildNumber(regs: RegMap, prefix: u8) !usize {
-    var rs = std.ArrayList([3]u8).init(allocator);
+    var rs = std.array_list.Managed([3]u8).init(allocator);
     defer rs.deinit();
 
     var it = regs.keyIterator();

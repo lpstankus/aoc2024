@@ -5,15 +5,33 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const check_step = b.step("check", "Check if the project builds without codegen (faster)");
+    const test_step = b.step("test", "Test garden perimeter and side counting");
+
+    const garden_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/12.zig"),
+            .target = target,
+            .optimize = .Debug,
+        }),
+    });
+    garden_tests.root_module.addAnonymousImport("example", .{
+        .root_source_file = b.path("src/examples/12.txt"),
+    });
+    garden_tests.root_module.addAnonymousImport("input", .{
+        .root_source_file = b.path("src/inputs/12.txt"),
+    });
+    test_step.dependOn(&b.addRunArtifact(garden_tests).step);
 
     inline for (1..26) |idx| {
         const file = std.fmt.comptimePrint("{d:0>2}", .{idx});
 
         const exe = b.addExecutable(.{
             .name = "aoc2024-" ++ file,
-            .root_source_file = b.path("src/" ++ file ++ ".zig"),
-            .target = target,
-            .optimize = optimize,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path("src/" ++ file ++ ".zig"),
+                .target = target,
+                .optimize = optimize,
+            }),
         });
         b.installArtifact(exe);
         const run_cmd = b.addRunArtifact(exe);
@@ -29,9 +47,11 @@ pub fn build(b: *std.Build) void {
 
         const check_exe = b.addExecutable(.{
             .name = "aoc2024-" ++ file,
-            .root_source_file = b.path("src/" ++ file ++ ".zig"),
-            .target = target,
-            .optimize = .Debug,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path("src/" ++ file ++ ".zig"),
+                .target = target,
+                .optimize = .Debug,
+            }),
         });
         check_step.dependOn(&check_exe.step);
 

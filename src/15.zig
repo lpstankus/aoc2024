@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 const Vec2 = struct { x: i64 = 0, y: i64 = 0 };
@@ -21,7 +21,7 @@ const Map = struct {
             .bot = .{},
         };
 
-        var grid = std.ArrayList([]Fill).init(allocator);
+        var grid = std.array_list.Managed([]Fill).init(allocator);
         defer grid.deinit();
 
         var i: usize = 0;
@@ -29,7 +29,7 @@ const Map = struct {
         while (lines.next()) |line| : (i += 1) {
             if (line.len == 0) break;
 
-            var row = std.ArrayList(Fill).init(allocator);
+            var row = std.array_list.Managed(Fill).init(allocator);
             defer row.deinit();
 
             map.width = if (wide) 2 * line.len else line.len;
@@ -57,7 +57,7 @@ const Map = struct {
         map.grid = try allocator.dupe([]Fill, grid.items);
         map.height = i;
 
-        var input = std.ArrayList([]const u8).init(allocator);
+        var input = std.array_list.Managed([]const u8).init(allocator);
         defer input.deinit();
         while (lines.next()) |line| {
             if (line.len == 0) continue;

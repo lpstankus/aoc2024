@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -25,14 +25,14 @@ const HikeCounts = std.AutoHashMap(Hike, u64);
 const HikingGuide = struct {
     width: usize,
     height: usize,
-    trailheads: std.ArrayList(Pos),
+    trailheads: std.array_list.Managed(Pos),
     topo: [][]u8,
 
     fn fromRaw(raw: []const u8) !HikingGuide {
-        var list = std.ArrayList([]u8).init(allocator);
+        var list = std.array_list.Managed([]u8).init(allocator);
         defer list.deinit();
 
-        var heads = std.ArrayList(Pos).init(allocator);
+        var heads = std.array_list.Managed(Pos).init(allocator);
 
         var width: usize = 0;
         var height: usize = 0;
@@ -111,7 +111,12 @@ const HikingGuide = struct {
 };
 
 const Queue = struct {
-    list: std.DoublyLinkedList(Pos),
+    const Node = struct {
+        link: std.DoublyLinkedList.Node = .{},
+        data: Pos,
+    };
+
+    list: std.DoublyLinkedList,
     arena: std.heap.ArenaAllocator,
 
     inline fn init() Queue {
@@ -123,13 +128,16 @@ const Queue = struct {
     }
 
     inline fn append(q: *Queue, p: Pos) !void {
-        var nd = try q.arena.allocator().create(@TypeOf(q.list).Node);
+        const nd = try q.arena.allocator().create(Node);
+        nd.link = .{};
         nd.data = p;
-        q.list.append(nd);
+        q.list.append(&nd.link);
     }
 
     inline fn pop(q: *Queue) ?Pos {
-        return if (q.list.pop()) |nd| nd.data else null;
+        const link = q.list.pop() orelse return null;
+        const nd: *Node = @fieldParentPtr("link", link);
+        return nd.data;
     }
 };
 

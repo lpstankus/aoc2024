@@ -1,8 +1,8 @@
 const std = @import("std");
 
-const List = std.ArrayList([]const u8);
+const List = std.array_list.Managed([]const u8);
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 
 pub fn main() !void {
     defer _ = gpa.deinit();

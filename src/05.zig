@@ -1,9 +1,9 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 
-const Update = std.ArrayList(u32);
-const UpdateList = std.ArrayList(Update);
+const Update = std.array_list.Managed(u32);
+const UpdateList = std.array_list.Managed(Update);
 
 const IdMap = std.AutoHashMap(u32, void);
 const PageMap = std.AutoHashMap(u32, IdMap);

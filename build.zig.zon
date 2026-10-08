@@ -1,11 +1,16 @@
 .{
     .name = .aoc2024,
     .version = "0.0.0",
+    .minimum_zig_version = "0.17.0",
     .dependencies = .{},
     .paths = .{
         "src",
         "build.zig",
         "build.zig.zon",
+        "mise.toml",
+        "scripts",
+        "verification",
+        "README.md",
         "LICENSE",
     },
     .fingerprint = 0x25105d4325774d2e,

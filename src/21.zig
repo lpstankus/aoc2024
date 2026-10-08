@@ -2,7 +2,7 @@ const std = @import("std");
 
 const Vec2 = struct { i: usize = 0, j: usize = 0 };
 const MoveButton = enum { right, left, up, down, activate };
-const MoveSeq = std.ArrayList(MoveButton);
+const MoveSeq = std.array_list.Managed(MoveButton);
 const Code = struct { btn: []u8, num: usize };
 
 const Cache = std.AutoHashMap(struct { cur: Vec2, tar: Vec2, depth: usize }, u64);
@@ -11,7 +11,7 @@ var cache: Cache = undefined;
 const A = 10;
 const INF = std.math.maxInt(usize);
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 pub fn main() !void {
@@ -48,8 +48,8 @@ fn solve(comptime name: []const u8) !void {
     println("part 2: {}", .{part2});
 }
 
-fn parseInput(raw: []const u8) !std.ArrayList(Code) {
-    var codes = std.ArrayList(Code).init(allocator);
+fn parseInput(raw: []const u8) !std.array_list.Managed(Code) {
+    var codes = std.array_list.Managed(Code).init(allocator);
     var lines = std.mem.splitScalar(u8, raw, '\n');
     while (lines.next()) |line| {
         if (line.len == 0) continue;

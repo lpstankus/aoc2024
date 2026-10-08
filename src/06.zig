@@ -2,15 +2,15 @@ const std = @import("std");
 
 const verbose = false;
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 const Dir = enum(u8) { Up, Right, Down, Left, Mult };
 const Guard = struct { x: i32, y: i32, dir: Dir };
 
 const Pos = union(enum) { Block: ?Dir, Free: ?Dir };
-const Row = std.ArrayList(Pos);
-const Map = std.ArrayList(Row);
+const Row = std.array_list.Managed(Pos);
+const Map = std.array_list.Managed(Row);
 
 pub fn main() !void {
     defer _ = gpa.deinit();

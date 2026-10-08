@@ -1,0 +1,6 @@
+[tools]
+zig = "0.17.0"
+
+[tasks.verify]
+description = "Build and compare all 25 example and input outputs"
+run = "python3 scripts/verify.py"

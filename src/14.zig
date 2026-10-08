@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 const Vec2 = struct { x: i64, y: i64 };
@@ -19,11 +19,11 @@ const Robot = struct { pos: Vec2, spd: Vec2 };
 const Map = struct {
     width: i64,
     height: i64,
-    bots: std.ArrayList(Robot),
+    bots: std.array_list.Managed(Robot),
     grid: [][]u8,
 
     fn fromRaw(raw: []const u8, comptime example: bool) !Map {
-        var bots = std.ArrayList(Robot).init(allocator);
+        var bots = std.array_list.Managed(Robot).init(allocator);
 
         var lines = std.mem.splitScalar(u8, raw, '\n');
         while (lines.next()) |line| {

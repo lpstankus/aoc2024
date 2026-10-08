@@ -1,6 +1,6 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
 const Data = struct { patterns: [][]u8, designs: [][]u8 };
@@ -39,7 +39,7 @@ fn solve(comptime name: []const u8) !void {
 }
 
 fn parseInput(raw: []const u8) !Data {
-    var patterns = std.ArrayList([]u8).init(allocator);
+    var patterns = std.array_list.Managed([]u8).init(allocator);
     defer patterns.deinit();
 
     var lines = std.mem.splitScalar(u8, raw, '\n');
@@ -51,7 +51,7 @@ fn parseInput(raw: []const u8) !Data {
         try patterns.append(try allocator.dupe(u8, pat));
     }
 
-    var designs = std.ArrayList([]u8).init(allocator);
+    var designs = std.array_list.Managed([]u8).init(allocator);
     defer designs.deinit();
 
     while (lines.next()) |line| {

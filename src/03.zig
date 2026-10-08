@@ -20,9 +20,9 @@ fn parseMul(input: []const u8) ?struct { result: u32, stride: u32 } {
     var i: u32 = 0;
 
     var len1: u32 = 0;
-    var arg1 = [_]u8{0} ** 3;
+    var arg1: [3]u8 = @splat(0);
     var len2: u32 = 0;
-    var arg2 = [_]u8{0} ** 3;
+    var arg2: [3]u8 = @splat(0);
 
     if (input.len < 3) return null;
     if (!std.mem.eql(u8, input[i .. i + 3], "mul")) return null;

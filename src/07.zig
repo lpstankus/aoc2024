@@ -1,9 +1,9 @@
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var gpa = std.heap.DebugAllocator(.{}){};
 var allocator = gpa.allocator();
 
-const Calibration = std.ArrayList(Equation);
+const Calibration = std.array_list.Managed(Equation);
 const Equation = struct {
     ans: u64,
     elements: []u64,
@@ -40,7 +40,7 @@ fn parseInput(data: []const u8) !Calibration {
         var args = std.mem.splitAny(u8, line, ": ");
         eq.ans = try std.fmt.parseInt(u64, args.next().?, 10);
 
-        var temp = std.ArrayList(u64).init(allocator);
+        var temp = std.array_list.Managed(u64).init(allocator);
         defer temp.deinit();
 
         while (args.next()) |arg| {
